@@ -19,43 +19,61 @@ export default function PortfolioHeader({ summary }: Props) {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Total Portfolio Value */}
-            <div className="bg-gray-900/80 backdrop-blur-sm p-6 rounded-xl border border-cyan-500/30 hover:border-cyan-500/60 transition-all duration-300">
-                <p className="text-gray-400 text-sm mb-2">Total Portfolio Value</p>
-                <p className="text-3xl font-bold">{formatCurrency(summary.totalValue)}</p>
-                <p className={`text-sm mt-2 ${summary.change24h >= 0 ? 'text-profit' : 'text-loss'}`}>
-                    {formatPercentage(summary.change24h)} (24h)
-                </p>
+        <div className="mb-12">
+            {/* Hero Section */}
+            <div className="text-center mb-8">
+                <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-3" style={{ color: 'rgb(29, 29, 31)' }}>
+                    Your Crypto Portfolio
+                </h1>
+                <p className="text-xl text-gray-500">at a glance</p>
             </div>
 
-            {/* Total Invested */}
-            <div className="bg-gray-900/80 backdrop-blur-sm p-6 rounded-xl border border-purple-500/30 hover:border-purple-500/60 transition-all duration-300">
-                <p className="text-gray-400 text-sm mb-2">Total Invested</p>
-                <p className="text-3xl font-bold">{formatCurrency(summary.totalInvested)}</p>
-                <p className="text-sm mt-2 text-gray-500">Original investment</p>
-            </div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Total Portfolio Value */}
+                <div className="glass-card glass-card-hover rounded-2xl p-6 gradient-blue">
+                    <p className="text-sm font-medium text-gray-500 mb-2">Total Value</p>
+                    <p className="text-4xl font-bold mb-2" style={{ color: 'rgb(29, 29, 31)' }}>
+                        {formatCurrency(summary.totalValue)}
+                    </p>
+                    <div className="flex items-center gap-1">
+                        <span className={`text-sm font-semibold ${summary.change24h >= 0 ? 'text-profit' : 'text-loss'}`}>
+                            {formatPercentage(summary.change24h)}
+                        </span>
+                        <span className="text-xs text-gray-500">24h</span>
+                    </div>
+                </div>
 
-            {/* Total Profit/Loss */}
-            <div className="bg-gray-900/80 backdrop-blur-sm p-6 rounded-xl border border-pink-500/30 hover:border-pink-500/60 transition-all duration-300">
-                <p className="text-gray-400 text-sm mb-2">Total Profit/Loss</p>
-                <p className={`text-3xl font-bold ${summary.totalProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
-                    {formatCurrency(summary.totalProfit)}
-                </p>
-                <p className={`text-sm mt-2 ${summary.totalProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
-                    {summary.totalProfit >= 0 ? '🟢' : '🔴'} {formatPercentage(summary.profitPercentage)}
-                </p>
-            </div>
+                {/* Total Invested */}
+                <div className="glass-card glass-card-hover rounded-2xl p-6 gradient-purple">
+                    <p className="text-sm font-medium text-gray-500 mb-2">Invested</p>
+                    <p className="text-4xl font-bold mb-2" style={{ color: 'rgb(29, 29, 31)' }}>
+                        {formatCurrency(summary.totalInvested)}
+                    </p>
+                    <p className="text-xs text-gray-500">Original investment</p>
+                </div>
 
-            {/* Return */}
-            <div className="bg-gray-900/80 backdrop-blur-sm p-6 rounded-xl border border-cyan-500/30 hover:border-cyan-500/60 transition-all duration-300">
-                <p className="text-gray-400 text-sm mb-2">Return</p>
-                <p className={`text-3xl font-bold ${summary.profitPercentage >= 0 ? 'text-profit' : 'text-loss'}`}>
-                    {formatPercentage(summary.profitPercentage)}
-                </p>
-                <p className="text-sm mt-2 text-gray-500">
-                    {summary.totalProfit >= 0 ? 'Profit' : 'Loss'}
-                </p>
+                {/* Total Profit/Loss */}
+                <div className="glass-card glass-card-hover rounded-2xl p-6 gradient-green">
+                    <p className="text-sm font-medium text-gray-500 mb-2">Profit/Loss</p>
+                    <p className={`text-4xl font-bold mb-2 ${summary.totalProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
+                        {formatCurrency(summary.totalProfit)}
+                    </p>
+                    <p className={`text-xs font-semibold ${summary.totalProfit >= 0 ? 'text-profit' : 'text-loss'}`}>
+                        {formatPercentage(summary.profitPercentage)}
+                    </p>
+                </div>
+
+                {/* Return */}
+                <div className="glass-card glass-card-hover rounded-2xl p-6">
+                    <p className="text-sm font-medium text-gray-500 mb-2">Return</p>
+                    <p className={`text-4xl font-bold mb-2 ${summary.profitPercentage >= 0 ? 'text-profit' : 'text-loss'}`}>
+                        {formatPercentage(summary.profitPercentage)}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                        {summary.totalProfit >= 0 ? 'Profit' : 'Loss'}
+                    </p>
+                </div>
             </div>
         </div>
     )

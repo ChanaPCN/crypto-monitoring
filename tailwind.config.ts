@@ -10,8 +10,13 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                profit: '#10b981',
-                loss: '#ef4444',
+                profit: 'rgb(52, 199, 89)',
+                loss: 'rgb(255, 59, 48)',
+                'apple-blue': 'rgb(0, 122, 255)',
+                'apple-purple': 'rgb(175, 82, 222)',
+                'apple-green': 'rgb(52, 199, 89)',
+                'apple-gray': 'rgb(142, 142, 147)',
+                'apple-bg': 'rgb(246, 246, 248)',
                 gray: {
                     750: '#2d3748',
                 },

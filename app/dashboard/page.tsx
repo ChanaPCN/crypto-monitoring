@@ -157,6 +157,8 @@ export default function DashboardPage() {
                     return {
                         coin_symbol: symbol,
                         coin_name: txs[0].coin_name, // All transactions have the same coin_name
+                        coin_id: txs[0].coin_id,
+                        logo_url: txs[0].logo_url,
                         totalAmount,
                         averageBuyPrice,
                         currentPrice,
@@ -253,103 +255,105 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-black text-white relative overflow-hidden">
-            {/* Neon stripe accents */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-pink-500 to-purple-500 opacity-80"></div>
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-pink-500 to-purple-500 blur-sm opacity-60"></div>
-
-            {/* Ambient glow effects */}
-            <div className="absolute top-20 left-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl"></div>
-
-            <div className="relative z-10">
-                <div className="container mx-auto px-4 py-8 max-w-7xl">
-                    {/* Header */}
-                    <div className="flex justify-between items-center mb-8">
-                        <div>
-                            <h1 className="text-3xl font-bold">📊 Crypto Portfolio Monitor</h1>
-                            <p className="text-gray-400 mt-1">{user?.email}</p>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+            {/* Top Navigation */}
+            <nav className="sticky top-0 z-50 glass-card border-b border-gray-200/80  mb-8">
+                <div className="container mx-auto px-6 py-4 max-w-7xl">
+                    <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-apple-blue to-apple-purple flex items-center justify-center text-white font-bold shadow-medium">
+                                ₿
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900">Portfolio</h2>
+                                <p className="text-xs text-gray-500">{user?.email}</p>
+                            </div>
                         </div>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setRefreshKey(prev => prev + 1)}
-                                className={`px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors ${refreshing ? 'opacity-75 cursor-wait' : ''}`}
+                                className={`px-4 py-2 bg-white border border-gray-300 hover:border-gray-400 text-gray-700 rounded-lg apple-transition shadow-soft hover:shadow-medium font-medium ${refreshing ? 'opacity-75 cursor-wait' : ''}`}
                                 title="Refresh prices"
                                 disabled={refreshing}
                             >
-                                <span className={refreshing ? 'inline-block animate-spin' : ''}>🔄</span> Refresh
+                                <span className={refreshing ? 'inline-block animate-spin' : ''}>↻</span>
                             </button>
                             <button
                                 onClick={() => setShowAddModal(true)}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                                className="px-4 py-2 bg-apple-blue text-white rounded-lg apple-transition hover:opacity-90 shadow-soft font-medium"
                             >
-                                + Add Transaction
+                                + Add
                             </button>
                             <button
                                 onClick={handleLogout}
-                                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                                className="px-4 py-2 bg-white border border-gray-300 hover:border-red-400 text-gray-700 hover:text-red-600 rounded-lg apple-transition shadow-soft font-medium"
                             >
                                 Logout
                             </button>
                         </div>
                     </div>
-
-                    {loading ? (
-                        <div className="text-center py-20">
-                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                            <p className="mt-4 text-gray-400">Loading portfolio...</p>
-                        </div>
-                    ) : (
-                        <>
-                            {/* Portfolio Summary */}
-                            <PortfolioHeader summary={summary} />
-
-                            {/* Portfolio Chart */}
-                            {assets.length > 0 && (
-                                <PortfolioChart assets={assets} />
-                            )}
-
-                            {/* Portfolio Table */}
-                            <AggregatedPortfolioTable
-                                assets={assets}
-                                onViewHistory={handleViewHistory}
-                                onAddTransaction={handleAddTransactionFor}
-                            />
-
-                            {assets.length === 0 && (
-                                <div className="text-center py-20 bg-gray-800 rounded-xl border border-gray-700">
-                                    <p className="text-gray-400 text-lg">No transactions in your portfolio yet.</p>
-                                    <button
-                                        onClick={() => setShowAddModal(true)}
-                                        className="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-                                    >
-                                        Add Your First Transaction
-                                    </button>
-                                </div>
-                            )}
-                        </>
-                    )}
                 </div>
+            </nav>
 
-                {/* Modals */}
-                {showAddModal && (
-                    <AddAssetModal
-                        onClose={handleCloseAddModal}
-                        onSuccess={handleAddSuccess}
-                        prefilledCoin={prefilledCoin}
-                    />
-                )}
+            <div className="container mx-auto px-6 py-8 max-w-7xl">
+                {loading ? (
+                    <div className="text-center py-20">
+                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-apple-blue"></div>
+                        <p className="mt-4 text-gray-500">Loading your portfolio...</p>
+                    </div>
+                ) : (
+                    <>
+                        {/* Portfolio Summary */}
+                        <PortfolioHeader summary={summary} />
 
-                {historyAsset && (
-                    <TransactionHistory
-                        transactions={historyAsset.transactions}
-                        coinSymbol={historyAsset.coin_symbol}
-                        coinName={historyAsset.coin_name}
-                        onClose={() => setHistoryAsset(null)}
-                        onDeleteTransaction={handleDeleteTransaction}
-                    />
+                        {/* Portfolio Chart */}
+                        {assets.length > 0 && (
+                            <PortfolioChart assets={assets} />
+                        )}
+
+                        {/* Portfolio Table */}
+                        <AggregatedPortfolioTable
+                            assets={assets}
+                            onViewHistory={handleViewHistory}
+                            onAddTransaction={handleAddTransactionFor}
+                        />
+
+                        {assets.length === 0 && (
+                            <div className="text-center py-20 glass-card rounded-2xl">
+                                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-3xl">
+                                    ₿
+                                </div>
+                                <p className="text-gray-600 text-lg mb-6">No transactions in your portfolio yet.</p>
+                                <button
+                                    onClick={() => setShowAddModal(true)}
+                                    className="px-6 py-3 bg-apple-blue text-white rounded-lg apple-transition hover:opacity-90 shadow-medium font-semibold"
+                                >
+                                    Add Your First Transaction
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
+
+            {/* Modals */}
+            {showAddModal && (
+                <AddAssetModal
+                    onClose={handleCloseAddModal}
+                    onSuccess={handleAddSuccess}
+                    prefilledCoin={prefilledCoin}
+                />
+            )}
+
+            {historyAsset && (
+                <TransactionHistory
+                    transactions={historyAsset.transactions}
+                    coinSymbol={historyAsset.coin_symbol}
+                    coinName={historyAsset.coin_name}
+                    onClose={() => setHistoryAsset(null)}
+                    onDeleteTransaction={handleDeleteTransaction}
+                />
+            )}
         </div>
     )
 }

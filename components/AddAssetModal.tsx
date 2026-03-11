@@ -20,6 +20,8 @@ interface Props {
 export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Props) {
     const [coinSymbol, setCoinSymbol] = useState(prefilledCoin?.symbol || '')
     const [coinName, setCoinName] = useState(prefilledCoin?.name || '')
+    const [coinId, setCoinId] = useState('')
+    const [logoUrl, setLogoUrl] = useState('')
     const [amount, setAmount] = useState('')
     const [buyPrice, setBuyPrice] = useState('')
     const [buyDate, setBuyDate] = useState(new Date().toISOString().split('T')[0])
@@ -58,6 +60,8 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
     const selectCoin = (coin: any) => {
         setCoinSymbol(coin.symbol)
         setCoinName(coin.name)
+        setCoinId(coin.id || '')
+        setLogoUrl(coin.logo || '')
         setSearchResults([])
     }
 
@@ -117,20 +121,19 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Not authenticated')
 
-            // Additional validation: Check for duplicate transactions within same minute
-            const { data: existingTx } = await supabase
-                .from('transactions')
-                .select('id')
-                .eq('user_id', user.id)
-                .eq('coin_symbol', sanitizedCoinSymbol)
-                .eq('buy_date', new Date(buyDate).toISOString())
-                .limit(1)
-
-            if (existingTx && existingTx.length > 0) {
-                setError('A transaction with this coin and date already exists')
-                setLoading(false)
-                return
-            }
+            // Create timestamp with selected date but current time
+            // This allows multiple transactions on same day while keeping unique timestamps
+            const selectedDate = new Date(buyDate)
+            const now = new Date()
+            const timestamp = new Date(
+                selectedDate.getFullYear(),
+                selectedDate.getMonth(),
+                selectedDate.getDate(),
+                now.getHours(),
+                now.getMinutes(),
+                now.getSeconds(),
+                now.getMilliseconds()
+            )
 
             const { error: insertError } = await supabase
                 .from('transactions')
@@ -138,9 +141,11 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
                     user_id: user.id,
                     coin_symbol: sanitizedCoinSymbol,
                     coin_name: sanitizedCoinName,
+                    coin_id: coinId || null,
+                    logo_url: logoUrl || null,
                     amount: parseFloat(amount),
                     buy_price: parseFloat(buyPrice),
-                    buy_date: new Date(buyDate).toISOString(),
+                    buy_date: timestamp.toISOString(),
                     notes: sanitizedNotes,
                 })
 
@@ -155,27 +160,27 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
     }
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full border border-gray-700">
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="glass-card rounded-2xl p-8 max-w-md w-full shadow-medium">
                 <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold">Add Transaction</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Add Transaction</h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-white text-2xl"
+                        className="text-gray-400 hover:text-gray-600 text-3xl leading-none apple-transition"
                     >
                         ×
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     {error && (
-                        <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded">
+                        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg text-sm">
                             {error}
                         </div>
                     )}
 
                     <div className="relative">
-                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Cryptocurrency
                         </label>
                         <input
@@ -184,24 +189,37 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
                             onChange={(e) => handleSearch(e.target.value)}
                             placeholder="Search (e.g., BTC, ETH)"
                             required
-                            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent apple-transition"
                         />
                         {searching && (
-                            <div className="absolute right-3 top-9 text-gray-400">
+                            <div className="absolute right-3 top-11 text-gray-400 text-sm">
                                 Searching...
                             </div>
                         )}
                         {searchResults.length > 0 && (
-                            <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg max-h-48 overflow-y-auto">
+                            <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-medium max-h-48 overflow-y-auto">
                                 {searchResults.map((coin) => (
                                     <button
                                         key={coin.id}
                                         type="button"
                                         onClick={() => selectCoin(coin)}
-                                        className="w-full px-3 py-2 text-left hover:bg-gray-600 transition-colors"
+                                        className="w-full px-4 py-3 text-left hover:bg-gray-50 apple-transition flex items-center gap-3 first:rounded-t-xl last:rounded-b-xl"
                                     >
-                                        <div className="font-medium">{coin.symbol}</div>
-                                        <div className="text-sm text-gray-400">{coin.name}</div>
+                                        {coin.logo ? (
+                                            <img
+                                                src={coin.logo}
+                                                alt={coin.name}
+                                                className="w-8 h-8 rounded-full shadow-soft"
+                                            />
+                                        ) : (
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-apple-blue to-apple-purple flex items-center justify-center text-white text-sm font-bold">
+                                                {coin.symbol.charAt(0)}
+                                            </div>
+                                        )}
+                                        <div>
+                                            <div className="font-semibold text-gray-900">{coin.symbol}</div>
+                                            <div className="text-xs text-gray-500">{coin.name}</div>
+                                        </div>
                                     </button>
                                 ))}
                             </div>
@@ -209,7 +227,7 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Coin Name
                         </label>
                         <input
@@ -218,44 +236,46 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
                             onChange={(e) => setCoinName(e.target.value)}
                             placeholder="e.g., Bitcoin"
                             required
-                            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent apple-transition"
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">
-                            Amount
-                        </label>
-                        <input
-                            type="number"
-                            step="any"
-                            value={amount}
-                            onChange={(e) => setAmount(e.target.value)}
-                            placeholder="0.00"
-                            required
-                            min="0"
-                            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Amount
+                            </label>
+                            <input
+                                type="number"
+                                step="any"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                placeholder="0.00"
+                                required
+                                min="0"
+                                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent apple-transition"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Price (USD)
+                            </label>
+                            <input
+                                type="number"
+                                step="any"
+                                value={buyPrice}
+                                onChange={(e) => setBuyPrice(e.target.value)}
+                                placeholder="0.00"
+                                required
+                                min="0"
+                                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent apple-transition"
+                            />
+                        </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">
-                            Buy Price (USD)
-                        </label>
-                        <input
-                            type="number"
-                            step="any"
-                            value={buyPrice}
-                            onChange={(e) => setBuyPrice(e.target.value)}
-                            placeholder="0.00"
-                            required
-                            min="0"
-                            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Buy Date
                         </label>
                         <input
@@ -263,12 +283,12 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
                             value={buyDate}
                             onChange={(e) => setBuyDate(e.target.value)}
                             required
-                            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent apple-transition"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Notes (Optional)
                         </label>
                         <textarea
@@ -276,7 +296,7 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
                             onChange={(e) => setNotes(e.target.value)}
                             placeholder="e.g., Bought during the dip, DCA strategy, etc."
                             rows={3}
-                            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-apple-blue focus:border-transparent resize-none apple-transition"
                         />
                     </div>
 
@@ -284,16 +304,16 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                            className="flex-1 px-4 py-3 bg-white border border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg apple-transition shadow-soft hover:shadow-medium"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 px-4 py-3 bg-apple-blue text-white font-semibold rounded-lg apple-transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-soft"
                         >
-                            {loading ? 'Adding...' : 'Add Transaction'}
+                            {loading ? 'Adding...' : 'Add'}
                         </button>
                     </div>
                 </form>

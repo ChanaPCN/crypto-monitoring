@@ -3,6 +3,8 @@ export interface Transaction {
     user_id: string
     coin_symbol: string
     coin_name: string
+    coin_id?: string
+    logo_url?: string
     amount: number
     buy_price: number
     buy_date: string
@@ -48,6 +50,8 @@ export interface AssetWithPrice extends PortfolioAsset {
 export interface AggregatedAsset {
     coin_symbol: string
     coin_name: string
+    coin_id?: string
+    logo_url?: string
     totalAmount: number
     averageBuyPrice: number
     totalInvested: number

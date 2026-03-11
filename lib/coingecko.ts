@@ -40,6 +40,7 @@ export async function searchCrypto(query: string) {
             id: coin.id,
             symbol: coin.symbol.toUpperCase(),
             name: coin.name,
+            logo: coin.thumb || coin.large || coin.small || '',
         }))
     } catch (error) {
         console.error('Error searching crypto:', error)
