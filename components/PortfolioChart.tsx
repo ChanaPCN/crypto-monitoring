@@ -8,27 +8,27 @@ interface Props {
     assets: AggregatedAsset[]
 }
 
-// Coin-specific colors based on their brand colors
+// Coin-specific colors based on their brand colors - Softer for premium Apple look
 const getCoinColor = (symbol: string): string => {
     const coinColors: { [key: string]: string } = {
-        'BTC': '#F7931A',   // Bitcoin orange
-        'ETH': '#627EEA',   // Ethereum blue
-        'BNB': '#F3BA2F',   // Binance yellow
-        'SOL': '#9945FF',   // Solana purple
-        'XRP': '#23292F',   // Ripple black/gray
-        'ADA': '#0033AD',   // Cardano blue
-        'DOGE': '#C2A633',  // Dogecoin gold
-        'DOT': '#E6007A',   // Polkadot pink
-        'MATIC': '#8247E5', // Polygon purple
-        'AVAX': '#E84142',  // Avalanche red
-        'LINK': '#2A5ADA',  // Chainlink blue
-        'UNI': '#FF007A',   // Uniswap pink
-        'LTC': '#345D9D',   // Litecoin blue
-        'ATOM': '#2E3148',  // Cosmos dark
-        'SHIB': '#FFA409',  // Shiba orange
+        'BTC': '#F6B55C',   // Bitcoin orange - softer
+        'ETH': '#8FA2FF',   // Ethereum blue - softer
+        'BNB': '#F5C95A',   // Binance yellow - softer
+        'SOL': '#B47AFF',   // Solana purple - softer
+        'XRP': '#52595F',   // Ripple gray - softer
+        'ADA': '#3366CC',   // Cardano blue - softer
+        'DOGE': '#E2C868',  // Dogecoin gold - softer
+        'DOT': '#F04FA0',   // Polkadot pink - softer
+        'MATIC': '#9F6BF0', // Polygon purple - softer
+        'AVAX': '#ED6A6B',  // Avalanche red - softer
+        'LINK': '#5A8AE8',  // Chainlink blue - softer
+        'UNI': '#FF4D9F',   // Uniswap pink - softer
+        'LTC': '#5C82B8',   // Litecoin blue - softer
+        'ATOM': '#52586F',  // Cosmos dark - softer
+        'SHIB': '#FFB84D',  // Shiba orange - softer
     }
 
-    return coinColors[symbol.toUpperCase()] || `hsl(${Math.random() * 360}, 70%, 60%)`
+    return coinColors[symbol.toUpperCase()] || `hsl(${Math.random() * 360}, 65%, 65%)`
 }
 
 export default function PortfolioChart({ assets }: Props) {
@@ -95,35 +95,27 @@ export default function PortfolioChart({ assets }: Props) {
                     y="48%"
                     textAnchor="middle"
                     dominantBaseline="central"
-                    className="font-bold"
-                    style={{ fontSize: '32px', fill: '#1d1d1f' }}
+                    className="font-semibold"
+                    style={{ fontSize: '24px', fill: '#1d1d1f', letterSpacing: '-0.02em' }}
                 >
                     {formatCurrency(totalValue)}
                 </text>
-                <text
-                    x="50%"
-                    y="56%"
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    className="font-medium"
-                    style={{ fontSize: '14px', fill: '#86868b' }}
-                >
-                    Total Portfolio
-                </text>
                 {!showingInvestedValue && profitLoss !== 0 && (
-                    <text
-                        x="50%"
-                        y="62%"
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        className="font-semibold"
-                        style={{
-                            fontSize: '13px',
-                            fill: profitLoss >= 0 ? '#34c759' : '#ff3b30'
-                        }}
-                    >
-                        {profitLoss >= 0 ? '+' : ''}{profitLossPercentage.toFixed(2)}% total
-                    </text>
+                    <>
+                        <text
+                            x="50%"
+                            y="56%"
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            className="font-medium"
+                            style={{
+                                fontSize: '13px',
+                                fill: profitLoss >= 0 ? '#34c759' : '#ff3b30'
+                            }}
+                        >
+                            {profitLoss >= 0 ? '▲' : '▼'} {profitLoss >= 0 ? '+' : ''}{profitLossPercentage.toFixed(1)}%
+                        </text>
+                    </>
                 )}
             </g>
         )
@@ -131,91 +123,25 @@ export default function PortfolioChart({ assets }: Props) {
 
     // Custom label for cleaner look
     const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percentage, logo, name }: any) => {
-        if (percentage < 5) return null // Don't show label for small slices
-
-        const RADIAN = Math.PI / 180
-
-        // Logo position - closer to center
-        const logoRadius = innerRadius + (outerRadius - innerRadius) * 0.3
-        const logoX = cx + logoRadius * Math.cos(-midAngle * RADIAN)
-        const logoY = cy + logoRadius * Math.sin(-midAngle * RADIAN)
-
-        // Text position - at the edge
-        const textRadius = innerRadius + (outerRadius - innerRadius) * 0.75
-        const textX = cx + textRadius * Math.cos(-midAngle * RADIAN)
-        const textY = cy + textRadius * Math.sin(-midAngle * RADIAN)
-
-        return (
-            <g>
-                {/* Logo image */}
-                {logo && (
-                    <foreignObject
-                        x={logoX - 18}
-                        y={logoY - 18}
-                        width={36}
-                        height={36}
-                    >
-                        <div
-                            style={{
-                                width: '36px',
-                                height: '36px',
-                                borderRadius: '50%',
-                                overflow: 'hidden',
-                                background: 'white',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                            }}
-                        >
-                            <img
-                                src={logo}
-                                alt={name}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                }}
-                                onError={(e) => {
-                                    e.currentTarget.style.display = 'none'
-                                }}
-                            />
-                        </div>
-                    </foreignObject>
-                )}
-
-                {/* Percentage text */}
-                <text
-                    x={textX}
-                    y={textY}
-                    fill="white"
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fontSize="15"
-                    fontWeight="700"
-                    style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}
-                >
-                    {`${percentage.toFixed(0)}%`}
-                </text>
-            </g>
-        )
+        // Don't show any labels on mobile for cleaner look
+        return null
     }
 
     return (
-        <div className="glass-card rounded-2xl p-6 mb-8">
-            <div className="mb-6">
-                <h2 className="text-3xl font-bold text-gray-900">
+        <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-4 sm:p-6 mb-5 sm:mb-8 border border-gray-200/40 shadow-sm">
+            <div className="mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-2xl font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>
                     Portfolio Allocation
                 </h2>
                 {showingInvestedValue && (
-                    <p className="text-sm text-gray-500 mt-1">
-                        Showing invested amounts (price data unavailable)
+                    <p className="text-xs text-gray-400 mt-1">
+                        Showing invested amounts
                     </p>
                 )}
             </div>
-            <div className="flex flex-col lg:flex-row items-center gap-6">
-                {/* Chart Section - Bigger and more prominent */}
-                <div className="w-full lg:w-3/5 h-[500px] flex items-center justify-center -my-4">
+            <div className="flex flex-col lg:flex-row items-center gap-4 sm:gap-6">
+                {/* Chart Section - Full width on mobile */}
+                <div className="w-full lg:w-3/5 h-[240px] sm:h-[500px] flex items-center justify-center">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <defs>
@@ -230,9 +156,9 @@ export default function PortfolioChart({ assets }: Props) {
                                 data={chartData}
                                 cx="50%"
                                 cy="50%"
-                                innerRadius={100}
-                                outerRadius={180}
-                                paddingAngle={3}
+                                innerRadius={65}
+                                outerRadius={90}
+                                paddingAngle={2}
                                 dataKey="value"
                                 label={renderCustomLabel}
                                 labelLine={false}
@@ -243,12 +169,12 @@ export default function PortfolioChart({ assets }: Props) {
                                     <Cell
                                         key={`cell-${index}`}
                                         fill={`url(#gradient-${index})`}
-                                        stroke="rgba(255, 255, 255, 0.9)"
-                                        strokeWidth={3}
-                                        opacity={hoveredIndex === null || hoveredIndex === index ? 1 : 0.4}
+                                        stroke="rgba(255, 255, 255, 0.95)"
+                                        strokeWidth={2}
+                                        opacity={hoveredIndex === null || hoveredIndex === index ? 1 : 0.5}
                                         style={{
-                                            filter: hoveredIndex === index ? 'brightness(1.1)' : 'none',
-                                            transition: 'all 0.3s ease',
+                                            filter: hoveredIndex === index ? 'brightness(1.05)' : 'none',
+                                            transition: 'all 0.2s ease',
                                             cursor: 'pointer'
                                         }}
                                     />
@@ -275,37 +201,29 @@ export default function PortfolioChart({ assets }: Props) {
                     </ResponsiveContainer>
                 </div>
 
-                {/* Asset Cards - Improved styling */}
+                {/* Asset Cards - Lighter Apple-style */}
                 <div className="w-full lg:w-2/5">
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                         {chartData.map((item, index) => (
                             <div
                                 key={index}
                                 onMouseEnter={() => setHoveredIndex(index)}
                                 onMouseLeave={() => setHoveredIndex(null)}
-                                className="group relative p-4 bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-2xl transition-all duration-300 cursor-pointer"
+                                onTouchStart={() => setHoveredIndex(index)}
+                                className="group relative p-2.5 bg-white/60 backdrop-blur-xl border rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.98]"
                                 style={{
                                     boxShadow: hoveredIndex === index
-                                        ? '0 12px 32px rgba(0, 0, 0, 0.12)'
-                                        : '0 2px 8px rgba(0, 0, 0, 0.04)',
-                                    transform: hoveredIndex === index ? 'translateY(-2px) scale(1.02)' : 'none',
-                                    borderColor: hoveredIndex === index ? item.color : 'rgb(229, 229, 234, 0.6)',
+                                        ? '0 4px 12px rgba(0, 0, 0, 0.08)'
+                                        : '0 1px 3px rgba(0, 0, 0, 0.04)',
+                                    borderColor: hoveredIndex === index ? item.color : 'rgba(229, 229, 234, 0.4)',
+                                    borderWidth: '1px',
                                 }}
                             >
-                                {/* Color indicator bar */}
-                                <div
-                                    className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl transition-all duration-300"
-                                    style={{
-                                        backgroundColor: item.color,
-                                        width: hoveredIndex === index ? '4px' : '3px',
-                                    }}
-                                />
-
-                                <div className="flex items-center justify-between pl-2">
-                                    <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 min-w-0">
                                         {/* Coin logo */}
                                         {item.logo && (
-                                            <div className="w-10 h-10 rounded-full overflow-hidden bg-white shadow-sm flex items-center justify-center">
+                                            <div className="w-7 h-7 rounded-full overflow-hidden bg-white shadow-sm flex items-center justify-center flex-shrink-0">
                                                 <img
                                                     src={item.logo}
                                                     alt={item.name}
@@ -316,13 +234,15 @@ export default function PortfolioChart({ assets }: Props) {
                                                 />
                                             </div>
                                         )}
-                                        <div>
-                                            <div className="font-semibold text-lg text-gray-900">{item.name}</div>
-                                            <div className="text-sm font-medium text-gray-500">{item.percentage.toFixed(1)}% of portfolio</div>
+                                        <div className="min-w-0">
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="font-semibold text-sm text-gray-900">{item.name}</span>
+                                                <span className="text-xs font-medium text-gray-400">{item.percentage.toFixed(1)}%</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="font-bold text-xl text-gray-900">{formatCurrency(item.value)}</div>
+                                    <div className="text-right flex-shrink-0">
+                                        <div className="font-semibold text-sm text-gray-900" style={{ letterSpacing: '-0.01em' }}>{formatCurrency(item.value)}</div>
                                     </div>
                                 </div>
                             </div>

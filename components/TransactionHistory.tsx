@@ -73,83 +73,97 @@ export default function TransactionHistory({
     const avgBuyPrice = totalInvested / totalAmount
 
     return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900/95 backdrop-blur-xl rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-cyan-500/40 flex flex-col shadow-2xl">
-                {/* Header */}
-                <div className="p-6 border-b border-cyan-500/30 bg-gradient-to-r from-cyan-500/10 to-pink-500/10">
-                    <div className="flex justify-between items-start">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-[520px] w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+                {/* Header - Clean & Minimal */}
+                <div className="px-6 py-5 border-b border-gray-200">
+                    <div className="flex items-start justify-between mb-4">
                         <div>
-                            <h2 className="text-2xl font-bold">{coinSymbol} Transaction History</h2>
-                            <p className="text-gray-400 mt-1">{coinName}</p>
+                            <h2 className="text-xl font-semibold text-gray-900" style={{ letterSpacing: '-0.01em' }}>
+                                {coinSymbol} Transaction History
+                            </h2>
+                            <p className="text-sm text-gray-500 mt-0.5">{coinName}</p>
                         </div>
                         <button
                             onClick={onClose}
-                            className="text-gray-400 hover:text-white text-2xl"
+                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all duration-200"
+                            aria-label="Close"
                         >
-                            ×
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                            </svg>
                         </button>
                     </div>
 
-                    {/* Summary */}
-                    <div className="grid grid-cols-3 gap-4 mt-6">
-                        <div className="bg-black/40 backdrop-blur-sm p-4 rounded-lg border border-cyan-500/20">
-                            <p className="text-sm text-gray-400">Total Transactions</p>
-                            <p className="text-2xl font-bold mt-1 text-cyan-300">{transactions.length}</p>
-                        </div>
-                        <div className="bg-black/40 backdrop-blur-sm p-4 rounded-lg border border-purple-500/20">
-                            <p className="text-sm text-gray-400">Total Amount</p>
-                            <p className="text-2xl font-bold mt-1 text-purple-300">{formatNumber(totalAmount)}</p>
-                        </div>
-                        <div className="bg-black/40 backdrop-blur-sm p-4 rounded-lg border border-pink-500/20">
-                            <p className="text-sm text-gray-400">Avg Buy Price</p>
-                            <p className="text-2xl font-bold mt-1 text-pink-300">{formatCurrency(avgBuyPrice)}</p>
-                        </div>
+                    {/* Inline Stats - Clean chips */}
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium">
+                            {transactions.length} {transactions.length === 1 ? 'Transaction' : 'Transactions'}
+                        </span>
+                        <span className="text-gray-300">•</span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium">
+                            {formatNumber(totalAmount)} {coinSymbol}
+                        </span>
+                        <span className="text-gray-300">•</span>
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium">
+                            Avg {formatCurrency(avgBuyPrice)}
+                        </span>
                     </div>
                 </div>
 
-                {/* Transaction List */}
-                <div className="flex-1 overflow-y-auto p-6">
+                {/* Transaction List - Scrollable */}
+                <div className="flex-1 overflow-y-auto px-6 py-4">
                     <div className="space-y-3">
                         {transactions.map((transaction) => (
                             <div
                                 key={transaction.id}
-                                className="bg-black/30 backdrop-blur-sm p-4 rounded-lg border border-gray-700/50 hover:border-cyan-500/40 transition-all duration-200"
+                                className="bg-white border border-gray-200 rounded-2xl p-4 transition-all duration-200 hover:border-blue-500 group"
                             >
-                                <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-green-400 font-semibold px-2 py-0.5 bg-green-500/20 rounded border border-green-500/30">BUY</span>
-                                            <span className="text-gray-400">•</span>
-                                            <span className="text-gray-300">{formatDate(transaction.buy_date)}</span>
-                                        </div>
-
-                                        <div className="grid grid-cols-3 gap-4 mt-3">
-                                            <div>
-                                                <p className="text-xs text-gray-400">Amount</p>
-                                                <p className="font-semibold">{formatNumber(transaction.amount)} {coinSymbol}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-400">Buy Price</p>
-                                                <p className="font-semibold">{formatCurrency(transaction.buy_price)}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-400">Total Cost</p>
-                                                <p className="font-semibold">{formatCurrency(transaction.amount * transaction.buy_price)}</p>
-                                            </div>
-                                        </div>
-
-                                        {transaction.notes && (
-                                            <div className="mt-2">
-                                                <p className="text-xs text-gray-400">Notes</p>
-                                                <p className="text-sm text-gray-300">{transaction.notes}</p>
-                                            </div>
-                                        )}
+                                {/* Header: BUY • Date */}
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-green-600 font-semibold text-sm uppercase">BUY</span>
+                                        <span className="text-gray-300">•</span>
+                                        <span className="text-sm text-gray-600">{formatDate(transaction.buy_date)}</span>
                                     </div>
+                                </div>
 
+                                {/* Transaction Details - Clean structure */}
+                                <div className="space-y-2 mb-3">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-gray-500">Amount</span>
+                                        <span className="font-semibold text-gray-900">
+                                            {formatNumber(transaction.amount)} {coinSymbol}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm text-gray-500">Price</span>
+                                        <span className="font-semibold text-gray-900">
+                                            {formatCurrency(transaction.buy_price)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                                        <span className="text-sm font-medium text-gray-700">Total</span>
+                                        <span className="font-semibold text-gray-900">
+                                            {formatCurrency(transaction.amount * transaction.buy_price)}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Notes - Distinguished with italic */}
+                                {transaction.notes && (
+                                    <div className="mb-3 pt-3 border-t border-gray-100">
+                                        <p className="text-xs font-medium text-gray-500 mb-1">Notes</p>
+                                        <p className="text-sm text-gray-600 italic">{transaction.notes}</p>
+                                    </div>
+                                )}
+
+                                {/* Delete Button - Subtle text link */}
+                                <div className="pt-2">
                                     <button
                                         onClick={() => confirmDelete(transaction)}
                                         disabled={deletingId === transaction.id}
-                                        className="ml-4 px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm transition-colors disabled:opacity-50"
+                                        className="text-sm text-gray-400 hover:text-red-500 transition-colors duration-200 disabled:opacity-50 font-medium"
                                     >
                                         {deletingId === transaction.id ? 'Deleting...' : 'Delete'}
                                     </button>
@@ -158,66 +172,52 @@ export default function TransactionHistory({
                         ))}
                     </div>
                 </div>
-
-                {/* Footer */}
-                <div className="p-6 border-t border-gray-700">
-                    <button
-                        onClick={onClose}
-                        className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                    >
-                        Close
-                    </button>
-                </div>
             </div>
 
-            {/* Delete Confirmation Modal */}
+            {/* Delete Confirmation Modal - Clean fintech style */}
             {showDeleteConfirm && transactionToDelete && (
-                <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-10">
-                    <div className="bg-gray-900 rounded-lg p-6 max-w-md w-full mx-4 border-2 border-red-600">
-                        <h3 className="text-xl font-bold text-red-400 mb-3">⚠️ Confirm Deletion</h3>
-                        <p className="text-gray-300 mb-4">
-                            Are you sure you want to delete this transaction?
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-10">
+                    <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Confirm Deletion</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Are you sure you want to delete this transaction? This action cannot be undone.
                         </p>
 
-                        <div className="bg-gray-800 p-4 rounded-lg mb-6 border border-gray-700">
+                        <div className="bg-gray-50 rounded-xl p-4 mb-6 border border-gray-200">
                             <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-400">Date:</span>
-                                    <span className="text-white">{formatDate(transactionToDelete.buy_date)}</span>
+                                    <span className="text-gray-500">Date</span>
+                                    <span className="text-gray-900 font-medium">{formatDate(transactionToDelete.buy_date)}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-400">Amount:</span>
-                                    <span className="text-white">{formatNumber(transactionToDelete.amount)} {coinSymbol}</span>
+                                    <span className="text-gray-500">Amount</span>
+                                    <span className="text-gray-900 font-medium">{formatNumber(transactionToDelete.amount)} {coinSymbol}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-400">Price:</span>
-                                    <span className="text-white">{formatCurrency(transactionToDelete.buy_price)}</span>
+                                    <span className="text-gray-500">Price</span>
+                                    <span className="text-gray-900 font-medium">{formatCurrency(transactionToDelete.buy_price)}</span>
                                 </div>
-                                <div className="flex justify-between border-t border-gray-700 pt-2">
-                                    <span className="text-gray-400 font-semibold">Total:</span>
-                                    <span className="text-white font-semibold">{formatCurrency(transactionToDelete.amount * transactionToDelete.buy_price)}</span>
+                                <div className="flex justify-between pt-2 border-t border-gray-200">
+                                    <span className="text-gray-700 font-semibold">Total</span>
+                                    <span className="text-gray-900 font-semibold">{formatCurrency(transactionToDelete.amount * transactionToDelete.buy_price)}</span>
                                 </div>
                             </div>
                         </div>
-
-                        <p className="text-sm text-red-300 mb-6">
-                            ⚠️ This action cannot be undone!
-                        </p>
 
                         <div className="flex gap-3">
                             <button
                                 onClick={cancelDelete}
                                 disabled={deletingId !== null}
-                                className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50"
+                                className="flex-1 px-4 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-xl font-medium transition-all duration-200 disabled:opacity-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => handleDelete(transactionToDelete.id)}
                                 disabled={deletingId !== null}
-                                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors font-semibold disabled:opacity-50"
+                                className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition-all duration-200 disabled:opacity-50"
                             >
-                                {deletingId === transactionToDelete.id ? 'Deleting...' : 'Delete Forever'}
+                                {deletingId === transactionToDelete.id ? 'Deleting...' : 'Delete'}
                             </button>
                         </div>
                     </div>
