@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { searchCrypto } from '@/lib/coingecko'
+import {
+    validateCryptoAmount,
+    validatePrice,
+    validateCoinSymbol,
+    validateDate,
+    sanitizeInput
+} from '@/lib/security'
 
 interface Props {
     onClose: () => void
@@ -57,29 +64,91 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError(null)
+
+        // Comprehensive input validation
+        if (!coinSymbol || !coinName || !amount || !buyPrice || !buyDate) {
+            setError('Please fill in all required fields')
+            return
+        }
+
+        // Validate coin symbol
+        if (!validateCoinSymbol(coinSymbol)) {
+            setError('Invalid coin symbol. Only alphanumeric characters allowed (max 10 chars)')
+            return
+        }
+
+        // Validate amount
+        if (!validateCryptoAmount(amount)) {
+            setError('Invalid amount. Must be a positive number with max 18 decimal places')
+            return
+        }
+
+        // Validate price
+        if (!validatePrice(buyPrice)) {
+            setError('Invalid price. Must be a positive number')
+            return
+        }
+
+        // Validate date
+        if (!validateDate(buyDate)) {
+            setError('Invalid date. Date must be between 2009 and today')
+            return
+        }
+
+        // Sanitize text inputs
+        const sanitizedNotes = notes ? sanitizeInput(notes) : null
+        const sanitizedCoinName = sanitizeInput(coinName)
+        const sanitizedCoinSymbol = coinSymbol.toUpperCase().trim()
+
+        // Validate sanitized data lengths
+        if (sanitizedCoinName.length > 100) {
+            setError('Coin name too long')
+            return
+        }
+
+        if (sanitizedNotes && sanitizedNotes.length > 500) {
+            setError('Notes too long (max 500 characters)')
+            return
+        }
+
         setLoading(true)
 
         try {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Not authenticated')
 
+            // Additional validation: Check for duplicate transactions within same minute
+            const { data: existingTx } = await supabase
+                .from('transactions')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('coin_symbol', sanitizedCoinSymbol)
+                .eq('buy_date', new Date(buyDate).toISOString())
+                .limit(1)
+
+            if (existingTx && existingTx.length > 0) {
+                setError('A transaction with this coin and date already exists')
+                setLoading(false)
+                return
+            }
+
             const { error: insertError } = await supabase
                 .from('transactions')
                 .insert({
                     user_id: user.id,
-                    coin_symbol: coinSymbol.toUpperCase(),
-                    coin_name: coinName,
+                    coin_symbol: sanitizedCoinSymbol,
+                    coin_name: sanitizedCoinName,
                     amount: parseFloat(amount),
                     buy_price: parseFloat(buyPrice),
                     buy_date: new Date(buyDate).toISOString(),
-                    notes: notes || null,
+                    notes: sanitizedNotes,
                 })
 
             if (insertError) throw insertError
 
             onSuccess()
         } catch (error: any) {
-            setError(error.message || 'Failed to add asset')
+            setError(error.message || 'Failed to add transaction')
         } finally {
             setLoading(false)
         }

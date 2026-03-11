@@ -1,9 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import {
+    checkRateLimit,
+    validateEmail,
+    sanitizeErrorMessage,
+    generateBrowserFingerprint
+} from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,24 +20,71 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [googleLoading, setGoogleLoading] = useState(false)
+    const [isRateLimited, setIsRateLimited] = useState(false)
+    const [lockoutTime, setLockoutTime] = useState<number | null>(null)
+
+    // Generate browser fingerprint for rate limiting
+    const [fingerprint, setFingerprint] = useState<string>('')
+
+    useEffect(() => {
+        setFingerprint(generateBrowserFingerprint())
+    }, [])
+
+    useEffect(() => {
+        if (lockoutTime && lockoutTime > Date.now()) {
+            const timer = setInterval(() => {
+                if (Date.now() >= lockoutTime) {
+                    setIsRateLimited(false)
+                    setLockoutTime(null)
+                    setError(null)
+                }
+            }, 1000)
+            return () => clearInterval(timer)
+        }
+    }, [lockoutTime])
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setError(null)
+
+        // Validate inputs before processing
+        if (!email || !password) {
+            setError('Please enter both email and password')
+            return
+        }
+
+        // Validate email format
+        if (!validateEmail(email)) {
+            setError('Please enter a valid email address')
+            return
+        }
+
+        // Check rate limit
+        const rateLimitCheck = checkRateLimit(`login:${fingerprint}`, 5, 15 * 60 * 1000)
+        if (!rateLimitCheck.allowed) {
+            setIsRateLimited(true)
+            setLockoutTime(rateLimitCheck.resetTime)
+            const remainingMinutes = Math.ceil((rateLimitCheck.resetTime - Date.now()) / 60000)
+            setError(`Too many login attempts. Please try again in ${remainingMinutes} minute(s).`)
+            return
+        }
+
         setLoading(true)
 
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
-                email,
+                email: email.trim().toLowerCase(),
                 password,
             })
 
             if (error) throw error
 
+            // Successful login - clear rate limit for this user
             router.push('/dashboard')
             router.refresh()
         } catch (error: any) {
-            setError(error.message || 'An error occurred during login')
+            // Sanitize error message to prevent information leakage
+            setError(sanitizeErrorMessage(error))
         } finally {
             setLoading(false)
         }

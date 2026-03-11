@@ -1,9 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import {
+    checkRateLimit,
+    validateEmail,
+    validatePasswordStrength,
+    sanitizeErrorMessage,
+    generateBrowserFingerprint
+} from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,30 +23,68 @@ export default function SignUpPage() {
     const [loading, setLoading] = useState(false)
     const [googleLoading, setGoogleLoading] = useState(false)
     const [success, setSuccess] = useState(false)
+    const [passwordErrors, setPasswordErrors] = useState<string[]>([])
+    const [showPasswordRequirements, setShowPasswordRequirements] = useState(false)
+
+    const [fingerprint, setFingerprint] = useState<string>('')
+
+    useEffect(() => {
+        setFingerprint(generateBrowserFingerprint())
+    }, [])
+
+    // Validate password as user types
+    useEffect(() => {
+        if (password) {
+            const validation = validatePasswordStrength(password)
+            setPasswordErrors(validation.errors)
+        } else {
+            setPasswordErrors([])
+        }
+    }, [password])
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault()
         setError(null)
-        setLoading(true)
 
+        // Validate email
+        if (!validateEmail(email)) {
+            setError('Please enter a valid email address')
+            return
+        }
+
+        // Validate password match
         if (password !== confirmPassword) {
             setError('Passwords do not match')
-            setLoading(false)
             return
         }
 
-        if (password.length < 6) {
-            setError('Password must be at least 6 characters long')
-            setLoading(false)
+        // Validate password strength
+        const passwordValidation = validatePasswordStrength(password)
+        if (!passwordValidation.isValid) {
+            setError('Password does not meet security requirements')
+            setPasswordErrors(passwordValidation.errors)
             return
         }
+
+        // Check rate limit
+        const rateLimitCheck = checkRateLimit(`signup:${fingerprint}`, 3, 60 * 60 * 1000) // 3 attempts per hour
+        if (!rateLimitCheck.allowed) {
+            const remainingMinutes = Math.ceil((rateLimitCheck.resetTime - Date.now()) / 60000)
+            setError(`Too many signup attempts. Please try again in ${remainingMinutes} minute(s).`)
+            return
+        }
+
+        setLoading(true)
 
         try {
             const { data, error } = await supabase.auth.signUp({
-                email,
+                email: email.trim().toLowerCase(),
                 password,
                 options: {
                     emailRedirectTo: `${window.location.origin}/dashboard`,
+                    data: {
+                        email_confirmed: false
+                    }
                 },
             })
 
@@ -50,7 +95,7 @@ export default function SignUpPage() {
                 router.push('/login')
             }, 3000)
         } catch (error: any) {
-            setError(error.message || 'An error occurred during sign up')
+            setError(sanitizeErrorMessage(error))
         } finally {
             setLoading(false)
         }
