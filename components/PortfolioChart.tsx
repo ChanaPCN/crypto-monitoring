@@ -42,8 +42,10 @@ export default function PortfolioChart({ assets }: Props) {
     }
 
     return (
-        <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 mb-8">
-            <h2 className="text-xl font-bold mb-6">Portfolio Allocation</h2>
+        <div className="bg-gray-900/60 backdrop-blur-sm p-6 rounded-xl border border-purple-500/30 mb-8">
+            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-pink-400">Portfolio Allocation</span>
+            </h2>
             <div className="flex flex-col lg:flex-row items-center gap-8">
                 <div className="w-full lg:w-1/2 h-80">
                     <ResponsiveContainer width="100%" height="100%">

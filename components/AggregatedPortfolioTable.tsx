@@ -28,10 +28,10 @@ export default function AggregatedPortfolioTable({ assets, onViewHistory, onAddT
     }
 
     return (
-        <div className="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+        <div className="bg-gray-900/60 backdrop-blur-sm rounded-xl border border-gray-700/50 overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-gray-750">
+                    <thead className="bg-black/40 border-b border-cyan-500/30">
                         <tr className="text-left text-gray-400 text-sm">
                             <th className="px-6 py-4">Asset</th>
                             <th className="px-6 py-4 text-right">Transactions</th>
@@ -45,9 +45,9 @@ export default function AggregatedPortfolioTable({ assets, onViewHistory, onAddT
                             <th className="px-6 py-4 text-center">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-700">
+                    <tbody className="divide-y divide-gray-800/50">
                         {assets.map((asset) => (
-                            <tr key={asset.coin_symbol} className="hover:bg-gray-750 transition-colors">
+                            <tr key={asset.coin_symbol} className="hover:bg-gray-800/40 transition-all duration-200 border-l-2 border-transparent hover:border-cyan-500/50">
                                 <td className="px-6 py-4">
                                     <div>
                                         <div className="font-semibold">{asset.coin_symbol}</div>
@@ -55,7 +55,7 @@ export default function AggregatedPortfolioTable({ assets, onViewHistory, onAddT
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/50 text-blue-200">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
                                         {asset.transactions.length} {asset.transactions.length === 1 ? 'tx' : 'txs'}
                                     </span>
                                 </td>

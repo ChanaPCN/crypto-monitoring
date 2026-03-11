@@ -46,7 +46,14 @@ DROP POLICY IF EXISTS "Users can update own transactions" ON public.transactions
 DROP POLICY IF EXISTS "Users can delete own transactions" ON public.transactions;
 
 DROP POLICY IF EXISTS "Users can view own portfolio" ON public.portfolio;
-DROP POLICY IF EXISTS "Usertransactions table
+DROP POLICY IF EXISTS "Users can insert own portfolio" ON public.portfolio;
+DROP POLICY IF EXISTS "Users can update own portfolio" ON public.portfolio;
+DROP POLICY IF EXISTS "Users can delete own portfolio" ON public.portfolio;
+
+DROP POLICY IF EXISTS "Users can view own history" ON public.portfolio_history;
+DROP POLICY IF EXISTS "Users can insert own history" ON public.portfolio_history;
+
+-- Create RLS policies for transactions table
 CREATE POLICY "Users can view own transactions"
     ON public.transactions FOR SELECT
     USING (auth.uid() = user_id);
@@ -63,12 +70,6 @@ CREATE POLICY "Users can delete own transactions"
     ON public.transactions FOR DELETE
     USING (auth.uid() = user_id);
 
--- Create RLS policies for portfolio table (backward compatibility)n portfolio" ON public.portfolio;
-DROP POLICY IF EXISTS "Users can update own portfolio" ON public.portfolio;
-DROP POLICY IF EXISTS "Users can delete own portfolio" ON public.portfolio;
-DROP POLICY IF EXISTS "Users can view own history" ON public.portfolio_history;
-DROP POLICY IF EXISTS "Users can insert own history" ON public.portfolio_history;
-
 -- Create RLS policies for portfolio table
 CREATE POLICY "Users can view own portfolio"
     ON public.portfolio FOR SELECT
@@ -79,10 +80,7 @@ CREATE POLICY "Users can insert own portfolio"
     WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update own portfolio"
-    ON public.portfolio FOR UPDtransactions_user_id ON public.transactions(user_id);
-CREATE INDEX IF NOT EXISTS idx_transactions_coin_symbol ON public.transactions(user_id, coin_symbol);
-CREATE INDEX IF NOT EXISTS idx_transactions_buy_date ON public.transactions(buy_date DESC);
-CREATE INDEX IF NOT EXISTS idx_ATE
+    ON public.portfolio FOR UPDATE
     USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own portfolio"
@@ -99,6 +97,10 @@ CREATE POLICY "Users can insert own history"
     WITH CHECK (auth.uid() = user_id);
 
 -- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON public.transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_coin_symbol ON public.transactions(user_id, coin_symbol);
+CREATE INDEX IF NOT EXISTS idx_transactions_buy_date ON public.transactions(buy_date DESC);
+
 CREATE INDEX IF NOT EXISTS idx_portfolio_user_id ON public.portfolio(user_id);
 CREATE INDEX IF NOT EXISTS idx_portfolio_history_user_id ON public.portfolio_history(user_id);
 CREATE INDEX IF NOT EXISTS idx_portfolio_history_timestamp ON public.portfolio_history(timestamp DESC);
