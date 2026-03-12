@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { searchCrypto } from '@/lib/coingecko'
+import { searchCrypto, getCryptoPrices, symbolToCoinGeckoId } from '@/lib/coingecko'
 import {
     validateCryptoAmount,
     validatePrice,
@@ -32,6 +32,8 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
     const [searching, setSearching] = useState(false)
     const [showNotes, setShowNotes] = useState(false)
     const [selectedCoin, setSelectedCoin] = useState<any>(null)
+    const [currentPrice, setCurrentPrice] = useState<number | null>(null)
+    const [loadingPrice, setLoadingPrice] = useState(false)
 
     // Prefill coin data if provided
     useEffect(() => {
@@ -59,13 +61,33 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
         }
     }
 
-    const selectCoin = (coin: any) => {
+    const selectCoin = async (coin: any) => {
         setCoinSymbol(coin.symbol)
         setCoinName(coin.name)
         setCoinId(coin.id || '')
         setLogoUrl(coin.logo || '')
         setSelectedCoin(coin)
         setSearchResults([])
+
+        // Fetch current price
+        if (coin.symbol) {
+            setLoadingPrice(true)
+            try {
+                const coinGeckoId = symbolToCoinGeckoId(coin.symbol)
+                const prices = await getCryptoPrices([coinGeckoId])
+                const priceData = prices[coinGeckoId]
+                if (priceData && priceData.usd) {
+                    setCurrentPrice(priceData.usd)
+                } else {
+                    setCurrentPrice(null)
+                }
+            } catch (error) {
+                console.error('Error fetching current price:', error)
+                setCurrentPrice(null)
+            } finally {
+                setLoadingPrice(false)
+            }
+        }
     }
 
     // Calculate total investment
@@ -219,6 +241,7 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
                                         setSelectedCoin(null)
                                         setCoinSymbol('')
                                         setCoinName('')
+                                        setCurrentPrice(null)
                                     }}
                                 >
                                     {selectedCoin.logo ? (
@@ -235,10 +258,17 @@ export default function AddAssetModal({ onClose, onSuccess, prefilledCoin }: Pro
                                     <div className="flex-1">
                                         <div className="font-semibold text-gray-900">{selectedCoin.symbol}</div>
                                         <div className="text-sm text-gray-500">{selectedCoin.name}</div>
+                                        {loadingPrice ? (
+                                            <div className="text-xs text-gray-400 mt-0.5">Loading price...</div>
+                                        ) : currentPrice !== null ? (
+                                            <div className="text-xs text-blue-600 font-medium mt-0.5">
+                                                Current: ${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </div>
+                                        ) : null}
                                     </div>
                                     <button
                                         type="button"
-                                        className="text-gray-400 hover:text-gray-600 text-sm"
+                                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                                     >
                                         Change
                                     </button>

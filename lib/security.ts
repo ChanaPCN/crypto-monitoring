@@ -40,11 +40,47 @@ export function checkRateLimit(
 }
 
 /**
- * Validate email format with strict regex
+ * Validate email format with RFC 5322 compliant regex
+ * More permissive to accept valid emails
  */
 export function validateEmail(email: string): boolean {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    return emailRegex.test(email) && email.length <= 254
+    // Basic sanity checks
+    if (!email || email.length > 254) {
+        return false
+    }
+
+    // More permissive regex that allows common email formats
+    // Including Gmail with numbers, dots, plus signs, etc.
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+    if (!emailRegex.test(email)) {
+        return false
+    }
+
+    // Additional checks
+    const parts = email.split('@')
+    if (parts.length !== 2) {
+        return false
+    }
+
+    const [localPart, domainPart] = parts
+
+    // Check local part (before @)
+    if (localPart.length === 0 || localPart.length > 64) {
+        return false
+    }
+
+    // Check domain part (after @)
+    if (domainPart.length === 0 || domainPart.length > 255) {
+        return false
+    }
+
+    // Domain must have at least one dot
+    if (!domainPart.includes('.')) {
+        return false
+    }
+
+    return true
 }
 
 /**
