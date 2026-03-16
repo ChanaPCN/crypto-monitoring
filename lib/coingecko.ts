@@ -1,4 +1,5 @@
 import { CryptoPrice } from '@/types'
+import { getCMCPrices } from './coinmarketcap'
 
 const COINGECKO_API_BASE = 'https://api.coingecko.com/api/v3'
 const PRICE_CACHE_KEY = 'crypto_price_cache'
@@ -73,13 +74,43 @@ async function fetchWithRetry(
     }
 }
 
-// Optimized price fetching with caching and fallback
+// Optimized price fetching with CMC primary, CoinGecko fallback
 export async function getCryptoPrices(coinIds: string[]): Promise<CryptoPrice> {
     try {
         if (coinIds.length === 0) {
             return {}
         }
 
+        // Try CoinMarketCap first (if API key is configured)
+        const symbols = coinIds.map(id => coinGeckoIdToSymbol(id)).filter(s => s !== null) as string[]
+        if (symbols.length > 0) {
+            try {
+                const cmcPrices = await getCMCPrices(symbols)
+                if (Object.keys(cmcPrices).length > 0) {
+                    // Convert symbol-based prices back to coinId-based format
+                    const prices: CryptoPrice = {}
+                    coinIds.forEach(coinId => {
+                        const symbol = coinGeckoIdToSymbol(coinId)
+                        if (symbol && cmcPrices[symbol]) {
+                            prices[coinId] = cmcPrices[symbol]
+                        }
+                    })
+
+                    if (Object.keys(prices).length > 0) {
+                        // Cache CMC prices
+                        const cached = getCachedPrices()
+                        const mergedPrices = { ...cached?.prices, ...prices }
+                        cachePrices(mergedPrices)
+                        console.log('✅ CMC prices used:', Object.keys(prices).length, 'coins')
+                        return mergedPrices
+                    }
+                }
+            } catch (cmcError) {
+                console.warn('⚠️ CMC failed, falling back to CoinGecko:', cmcError)
+            }
+        }
+
+        // Fallback to CoinGecko
         const ids = coinIds.join(',')
         const url = `${COINGECKO_API_BASE}/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
 
@@ -100,14 +131,14 @@ export async function getCryptoPrices(coinIds: string[]): Promise<CryptoPrice> {
 
                 // Cache successful response
                 cachePrices(mergedPrices)
-                console.log('✅ Fresh prices fetched:', Object.keys(prices).length, 'coins')
+                console.log('✅ CoinGecko prices fetched:', Object.keys(prices).length, 'coins')
                 return mergedPrices
             }
         } catch (fetchError) {
-            console.error('❌ API fetch failed:', fetchError)
+            console.error('❌ CoinGecko API fetch failed:', fetchError)
         }
 
-        // Fallback to cached prices if API fails
+        // Fallback to cached prices if both APIs fail
         const cached = getCachedPrices()
         if (cached && cached.prices && Object.keys(cached.prices).length > 0) {
             const age = Math.floor((Date.now() - cached.timestamp) / 1000 / 60)
@@ -208,4 +239,57 @@ export function symbolToCoinGeckoId(symbol: string): string {
     // Fallback: try lowercase symbol (works for many coins)
     console.warn(`No mapping for ${symbol}, using lowercase fallback`)
     return symbol.toLowerCase()
+}
+
+// Reverse mapping: CoinGecko ID to Symbol
+export function coinGeckoIdToSymbol(coinGeckoId: string): string | null {
+    const symbolMap: { [key: string]: string } = {
+        'bitcoin': 'BTC',
+        'ethereum': 'ETH',
+        'binancecoin': 'BNB',
+        'solana': 'SOL',
+        'ripple': 'XRP',
+        'cardano': 'ADA',
+        'dogecoin': 'DOGE',
+        'matic-network': 'MATIC',
+        'polkadot': 'DOT',
+        'avalanche-2': 'AVAX',
+        'shiba-inu': 'SHIB',
+        'litecoin': 'LTC',
+        'chainlink': 'LINK',
+        'uniswap': 'UNI',
+        'cosmos': 'ATOM',
+        'tron': 'TRX',
+        'aptos': 'APT',
+        'arbitrum': 'ARB',
+        'optimism': 'OP',
+        'near': 'NEAR',
+        'filecoin': 'FIL',
+        'vechain': 'VET',
+        'internet-computer': 'ICP',
+        'hedera-hashgraph': 'HBAR',
+        'quant-network': 'QNT',
+        'blockstack': 'STX',
+        'immutable-x': 'IMX',
+        'aave': 'AAVE',
+        'maker': 'MKR',
+        'havven': 'SNX',
+        'curve-dao-token': 'CRV',
+        'algorand': 'ALGO',
+        'ethereum-classic': 'ETC',
+        'bitcoin-cash': 'BCH',
+        'stellar': 'XLM',
+        'monero': 'XMR',
+        'the-open-network': 'TON',
+        'injective-protocol': 'INJ',
+        'thorchain': 'RUNE',
+        'fantom': 'FTM',
+        'decentraland': 'MANA',
+        'the-sandbox': 'SAND',
+        'axie-infinity': 'AXS',
+        'theta-token': 'THETA',
+        'elrond-erd-2': 'EGLD',
+    }
+
+    return symbolMap[coinGeckoId.toLowerCase()] || null
 }
